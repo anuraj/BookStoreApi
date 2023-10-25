@@ -1,12 +1,17 @@
 using BookStoreApi.Data;
 using BookStoreApi.Models;
-using MongoFramework;
+using BookStoreApi.Repositories;
+using BookStoreApi.ViewModels;
+using Microsoft.EntityFrameworkCore;
+using MongoDB.Bson;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddTransient<IMongoDbConnection>(sp =>
-    MongoDbConnection.FromConnectionString(builder.Configuration.GetConnectionString("BookStoreDbConnection")));
-builder.Services.AddTransient<BookStoreDbContext>();
+var connectionString = builder.Configuration.GetConnectionString("MongoDbConnection")
+    ?? throw new InvalidOperationException("Connection string is null");
+
+var databaseName = builder.Configuration.GetConnectionString("MongoDbDatabaseName") ?? "BooksStoreDb";
+builder.Services.AddDbContext<BookStoreDbContext>(options => options.UseMongoDB(connectionString, databaseName));
 builder.Services.AddTransient<IBookRepository, BookRepository>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -22,9 +27,9 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.MapGet("/books", (IBookRepository bookRepository) =>
+app.MapGet("/books", async (IBookRepository bookRepository, CancellationToken cancellationToken) =>
 {
-    var books = bookRepository.GetAllBooks();
+    var books = await bookRepository.GetAllBooks(cancellationToken);
     return Results.Ok(books);
 })
 .WithName("Get all books")
@@ -32,8 +37,16 @@ app.MapGet("/books", (IBookRepository bookRepository) =>
 
 app.MapPost("/books", (IBookRepository bookRepository, Book book) =>
 {
-    var createdBook = bookRepository.AddBook(book);
-    return Results.Created($"/books/{book.Id}", createdBook);
+    var bookEntity = new BookEntity
+    {
+        Author = book.Author,
+        Category = book.Category,
+        Name = book.Name,
+        Price = book.Price
+    };
+
+    var createdBook = bookRepository.AddBook(bookEntity);
+    return Results.Created($"/books/{bookEntity.Id}", createdBook);
 })
 .WithName("Create a book")
 .WithOpenApi();
@@ -53,7 +66,14 @@ app.MapPut("/books/{id}", (IBookRepository bookRepository, string id, Book book)
         return Results.NotFound();
     }
 
-    bookRepository.UpdateBook(bookToUpdate, book);
+    var bookEntity = new BookEntity
+    {
+        Author = book.Author,
+        Category = book.Category,
+        Name = book.Name,
+        Price = book.Price
+    };
+    bookRepository.UpdateBook(bookToUpdate, bookEntity);
     return Results.NoContent();
 }).WithName("Update a book")
 .WithOpenApi();

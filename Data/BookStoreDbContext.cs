@@ -1,13 +1,18 @@
 using BookStoreApi.Models;
-using MongoFramework;
+using Microsoft.EntityFrameworkCore;
 
 namespace BookStoreApi.Data
 {
-    public class BookStoreDbContext : MongoDbContext
+    public class BookStoreDbContext : DbContext
     {
-        public BookStoreDbContext(IMongoDbConnection connection) : base(connection)
+        public BookStoreDbContext(DbContextOptions options) : base(options)
         {
         }
-        public MongoDbSet<Book> Books { get; set; } = null!;
+
+        protected BookStoreDbContext()
+        {
+        }
+
+        public DbSet<BookEntity> Books { get; set; } = null!;
     }
 }
