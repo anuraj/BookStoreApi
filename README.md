@@ -4,4 +4,6 @@ This is a CRUD implementation of Web API with MongoFramework nuget package. I am
 
 Repository pattern is implemented for enable testability.
 
-Here is the [Youtube video](https://www.youtube.com/watch?v=qsFyJSCz50Q&t=1126s) which helps to learn more about the MongoFramework nuget package
+~~Here is the [Youtube video](https://www.youtube.com/watch?v=qsFyJSCz50Q&t=1126s) which helps to learn more about the MongoFramework nuget package~~
+
+Here is the [Youtube video](https://www.youtube.com/watch?v=Zat-ferrjro) which helps to you learn more about the `MongoDB.EntityFrameworkCore` nuget package.
